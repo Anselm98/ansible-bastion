@@ -1,0 +1,112 @@
+---
+- name: Install OpenSSL
+  package:
+    name: openssl
+    state: present
+
+- name: Create PKI directory structure
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  loop:
+    - /etc/pki
+    - /etc/pki/ca
+    - /etc/pki/ca/private
+    - /etc/pki/ca/certs
+    - /etc/pki/server
+    - /etc/pki/server/private
+    - /etc/pki/server/certs
+
+- name: Set secure permissions on private directories
+  file:
+    path: "{{ item }}"
+    mode: '0700'
+    owner: root
+    group: root
+  loop:
+    - /etc/pki/ca/private
+    - /etc/pki/server/private
+
+- name: Create CA configuration file
+  template:
+    src: ca.conf.j2
+    dest: /etc/pki/ca/ca.conf
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: Create server certificate configuration file
+  template:
+    src: server.conf.j2
+    dest: /etc/pki/server/server.conf
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: Generate CA private key
+  command: >
+    openssl genrsa -out /etc/pki/ca/private/ca.key 4096
+  args:
+    creates: /etc/pki/ca/private/ca.key
+
+- name: Generate CA certificate
+  command: >
+    openssl req -new -x509 -days 3650 -key /etc/pki/ca/private/ca.key
+    -out /etc/pki/ca/certs/ca.crt -config /etc/pki/ca/ca.conf
+  args:
+    creates: /etc/pki/ca/certs/ca.crt
+
+- name: Generate server private key
+  command: >
+    openssl genrsa -out /etc/pki/server/private/server.key 2048
+  args:
+    creates: /etc/pki/server/private/server.key
+
+- name: Generate server certificate signing request
+  command: >
+    openssl req -new -key /etc/pki/server/private/server.key
+    -out /etc/pki/server/server.csr -config /etc/pki/server/server.conf
+  args:
+    creates: /etc/pki/server/server.csr
+
+- name: Generate server certificate signed by CA
+  command: >
+    openssl x509 -req -days 365 -in /etc/pki/server/server.csr
+    -CA /etc/pki/ca/certs/ca.crt -CAkey /etc/pki/ca/private/ca.key
+    -CAcreateserial -out /etc/pki/server/certs/server.crt
+    -extensions v3_req -extfile /etc/pki/server/server.conf
+  args:
+    creates: /etc/pki/server/certs/server.crt
+
+- name: Set secure permissions on all private keys
+  file:
+    path: "{{ item }}"
+    mode: '0600'
+    owner: root
+    group: root
+  loop:
+    - /etc/pki/ca/private/ca.key
+    - /etc/pki/server/private/server.key
+
+- name: Set permissions on certificates
+  file:
+    path: "{{ item }}"
+    mode: '0644'
+    owner: root
+    group: root
+  loop:
+    - /etc/pki/ca/certs/ca.crt
+    - /etc/pki/server/certs/server.crt
+
+- name: Create symlinks for nginx
+  file:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    state: link
+    force: yes
+  loop:
+    - { src: '/etc/pki/server/certs/server.crt', dest: '/etc/ssl/certs/nginx-selfsigned.crt' }
+    - { src: '/etc/pki/server/private/server.key', dest: '/etc/ssl/private/nginx-selfsigned.key' } 

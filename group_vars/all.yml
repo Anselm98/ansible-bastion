@@ -7,8 +7,13 @@
 # Firewall Configuration
 firewall_allowed_tcp_ports:
   - 22
-  - "{{ nginx_port }}"
   - "{{ nginx_ssl_port }}"
+
+# PKI Configuration
+pki_ca_organization: ""
+pki_ca_common_name: ""
+pki_server_organization: ""
+pki_server_common_name: "{{ ansible_fqdn | default('bastion.local') }}"
 
 # Nginx Configuration
 nginx_port: 80

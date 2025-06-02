@@ -1,0 +1,18 @@
+[req]
+distinguished_name = req_distinguished_name
+x509_extensions = v3_ca
+prompt = no
+
+[req_distinguished_name]
+C = {{ pki_ca_country | default('US') }}
+ST = {{ pki_ca_state | default('State') }}
+L = {{ pki_ca_city | default('City') }}
+O = {{ pki_ca_organization | default('Bastion CA') }}
+OU = {{ pki_ca_unit | default('IT Department') }}
+CN = {{ pki_ca_common_name | default('Bastion Root CA') }}
+
+[v3_ca]
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = critical,CA:true
+keyUsage = critical,digitalSignature,cRLSign,keyCertSign 

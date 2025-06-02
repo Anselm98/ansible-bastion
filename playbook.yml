@@ -8,6 +8,7 @@
     - ssh
     - pam
     - firewall
+    - pki
     - nginx
     - suricata
     - auditd
