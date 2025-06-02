@@ -8,7 +8,7 @@ firewall_ssh_ports:
 # Firewall Configuration
 firewall_allowed_tcp_ports:
   - 22
-  - "{{ nginx_ssl_port }}"
+  - 443
 
 firewall_backend_server: "{{ backend_server }}"
 firewall_backend_port: "{{ backend_port }}"

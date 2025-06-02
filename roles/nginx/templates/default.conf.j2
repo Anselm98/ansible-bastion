@@ -1,6 +1,6 @@
 server {
     listen {{ nginx_ssl_port }} ssl;
-    server_name {{ pki_server_common_name }} {{ ansible_default_ipv4.address | default('localhost') }};
+    server_name web.local.local {{ ansible_default_ipv4.address | default('localhost') }};
 
     # SSL Configuration
     ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
