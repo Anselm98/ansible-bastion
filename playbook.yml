@@ -8,6 +8,7 @@
     - ssh
     - pam
     - firewall
+    - nginx
     - suricata
     - auditd
 
@@ -19,6 +20,7 @@
         enabled: yes
       loop:
         - sshd
+        - nginx
         - suricata
         - auditd
       ignore_errors: yes
