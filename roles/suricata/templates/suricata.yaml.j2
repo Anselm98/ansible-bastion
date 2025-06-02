@@ -94,6 +94,16 @@ app-layer:
         enabled: yes
         detection-ports:
           dp: 53
+    dnp3:
+      enabled: yes
+      detection-enabled: yes
+      detection-ports:
+        dp: $DNP3_PORTS
+    modbus:
+      enabled: yes
+      detection-enabled: yes
+      detection-ports:
+        dp: $MODBUS_PORTS
 
 # Logging configuration
 outputs:
