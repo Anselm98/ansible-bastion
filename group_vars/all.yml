@@ -25,7 +25,7 @@ firewall_web_rate_limit_hitcount: 20
 pki_ca_organization: "Bastion CA"
 pki_ca_common_name: "Bastion Root CA"
 pki_server_organization: "Bastion Server"
-pki_server_common_name: "test.local.local"
+pki_server_common_name: "web.local.local"
 
 # Nginx Configuration
 nginx_port: 8080

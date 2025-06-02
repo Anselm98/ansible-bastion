@@ -19,7 +19,5 @@ subjectAltName = @alt_names
 [alt_names]
 DNS.1 = {{ pki_server_common_name | default(ansible_fqdn | default('localhost')) }}
 DNS.2 = localhost
-DNS.3 = test.local.local
-DNS.4 = web.local.local
 IP.1 = {{ ansible_default_ipv4.address | default('127.0.0.1') }}
 IP.2 = 127.0.0.1 
