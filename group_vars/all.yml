@@ -2,12 +2,24 @@
 # Global variables for all hosts
 
 # SSH Configuration
-
+firewall_ssh_ports:
+  - 22
 
 # Firewall Configuration
 firewall_allowed_tcp_ports:
   - 22
   - "{{ nginx_ssl_port }}"
+
+firewall_backend_server: "{{ backend_server }}"
+firewall_backend_port: "{{ backend_port }}"
+
+# Firewall logging and rate limiting
+firewall_log_level: 4
+firewall_log_rate_limit: "5/min"
+firewall_ssh_rate_limit_seconds: 60
+firewall_ssh_rate_limit_hitcount: 4
+firewall_web_rate_limit_seconds: 10
+firewall_web_rate_limit_hitcount: 20
 
 # PKI Configuration
 pki_ca_organization: ""
@@ -37,6 +49,17 @@ fail2ban_nginx_bantime: 3600
 fail2ban_nginx_maxretry: 6
 
 # Auditd Configuration
-
+auditd_num_logs: 5
+auditd_max_log_file: 100
+auditd_max_log_file_action: rotate
+auditd_space_left: 75
+auditd_space_left_action: email
+auditd_admin_space_left: 50
+auditd_admin_space_left_action: halt
+auditd_disk_full_action: suspend
+auditd_disk_error_action: suspend
+auditd_tcp_port: 60
+auditd_logrotate_rotate: 60
 
 # PAM Configuration
+

@@ -1,0 +1,56 @@
+---
+- name: Install iptables
+  package:
+    name: iptables
+    state: present
+
+- name: Create iptables configuration directory
+  file:
+    path: /etc/iptables
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Backup existing iptables rules
+  shell: iptables-save > /etc/iptables/iptables.rules.backup
+  ignore_errors: yes
+  changed_when: false
+
+- name: Generate iptables rules
+  template:
+    src: iptables.rules.j2
+    dest: /etc/iptables/iptables.rules
+    backup: yes
+    mode: '0644'
+    owner: root
+    group: root
+  notify: 
+    - reload iptables
+    - save iptables
+
+- name: Create systemd service for iptables
+  template:
+    src: iptables.service.j2
+    dest: /etc/systemd/system/iptables.service
+    mode: '0644'
+    owner: root
+    group: root
+  notify: systemd daemon reload
+
+- name: Apply iptables rules immediately
+  shell: iptables-restore < /etc/iptables/iptables.rules
+  changed_when: false
+  ignore_errors: yes
+
+- name: Save current iptables rules
+  shell: iptables-save > /etc/iptables/iptables.rules
+  changed_when: false
+  ignore_errors: yes
+
+- name: Enable and start iptables service
+  systemd:
+    name: iptables
+    enabled: yes
+    state: started
+  ignore_errors: yes 

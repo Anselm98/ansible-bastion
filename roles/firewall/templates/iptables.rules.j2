@@ -1,0 +1,149 @@
+# iptables rules for bastion host - Managed by Ansible
+*filter
+
+# Default policies - DROP everything by default
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+
+# Custom chains for better organization
+:LOGDROP - [0:0]
+:LOGACCEPT - [0:0]
+:SSH_CHAIN - [0:0]
+:WEB_CHAIN - [0:0]
+
+# ============= LOGGING CHAINS =============
+# Log and drop chain
+-A LOGDROP -m limit --limit 5/min -j LOG --log-prefix "iptables-DROP: " --log-level 4
+-A LOGDROP -j DROP
+
+# Log and accept chain  
+-A LOGACCEPT -m limit --limit 5/min -j LOG --log-prefix "iptables-ACCEPT: " --log-level 4
+-A LOGACCEPT -j ACCEPT
+
+# ============= LOOPBACK INTERFACE =============
+# Allow all traffic on loopback interface
+-A INPUT -i lo -j ACCEPT
+-A OUTPUT -o lo -j ACCEPT
+
+# ============= ESTABLISHED CONNECTIONS =============
+# Allow established and related connections
+-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+# ============= ICMP RULES =============
+# Allow ICMP ping (rate limited)
+-A INPUT -p icmp --icmp-type echo-request -m limit --limit 1/s --limit-burst 3 -j ACCEPT
+-A INPUT -p icmp --icmp-type echo-reply -j ACCEPT
+-A INPUT -p icmp --icmp-type destination-unreachable -j ACCEPT
+-A INPUT -p icmp --icmp-type time-exceeded -j ACCEPT
+
+# ============= SSH RULES =============
+-A SSH_CHAIN -m conntrack --ctstate NEW -m recent --set --name SSH
+-A SSH_CHAIN -m conntrack --ctstate NEW -m recent --update --seconds 60 --hitcount 4 --name SSH -j LOGDROP
+-A SSH_CHAIN -j ACCEPT
+
+# Allow SSH (with rate limiting and fail2ban integration)
+{% for port in firewall_ssh_ports | default([22]) %}
+-A INPUT -p tcp --dport {{ port }} -m conntrack --ctstate NEW -j SSH_CHAIN
+{% endfor %}
+
+# ============= WEB SERVER RULES =============
+-A WEB_CHAIN -m conntrack --ctstate NEW -m recent --set --name WEB
+-A WEB_CHAIN -m conntrack --ctstate NEW -m recent --update --seconds 10 --hitcount 20 --name WEB -j LOGDROP
+-A WEB_CHAIN -j ACCEPT
+
+# Allow HTTP/HTTPS traffic (with rate limiting)
+{% for port in firewall_allowed_tcp_ports | default([80, 443]) %}
+{% if port != 22 %}
+-A INPUT -p tcp --dport {{ port }} -m conntrack --ctstate NEW -j WEB_CHAIN
+{% endif %}
+{% endfor %}
+
+# ============= CUSTOM ALLOWED PORTS =============
+{% if firewall_custom_tcp_ports is defined %}
+{% for port in firewall_custom_tcp_ports %}
+-A INPUT -p tcp --dport {{ port }} -m conntrack --ctstate NEW -j ACCEPT
+{% endfor %}
+{% endif %}
+
+{% if firewall_custom_udp_ports is defined %}
+{% for port in firewall_custom_udp_ports %}
+-A INPUT -p udp --dport {{ port }} -j ACCEPT
+{% endfor %}
+{% endif %}
+
+# ============= OUTBOUND RULES =============
+# Allow outbound DNS
+-A OUTPUT -p tcp --dport 53 -j ACCEPT
+-A OUTPUT -p udp --dport 53 -j ACCEPT
+
+# Allow outbound HTTP/HTTPS for updates
+-A OUTPUT -p tcp --dport 80 -j ACCEPT
+-A OUTPUT -p tcp --dport 443 -j ACCEPT
+
+# Allow outbound NTP
+-A OUTPUT -p udp --dport 123 -j ACCEPT
+
+# Allow outbound SSH (for git, updates, etc.)
+-A OUTPUT -p tcp --dport 22 -j ACCEPT
+
+# Allow outbound SMTP for notifications
+-A OUTPUT -p tcp --dport 25 -j ACCEPT
+-A OUTPUT -p tcp --dport 587 -j ACCEPT
+
+{% if firewall_backend_server is defined and firewall_backend_port is defined %}
+# Allow outbound to backend server
+-A OUTPUT -p tcp -d {{ firewall_backend_server }} --dport {{ firewall_backend_port }} -j ACCEPT
+{% endif %}
+
+# ============= ANTI-SPOOFING RULES =============
+# Drop packets with bogus TCP flags
+-A INPUT -p tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -j LOGDROP
+-A INPUT -p tcp --tcp-flags FIN,SYN FIN,SYN -j LOGDROP
+-A INPUT -p tcp --tcp-flags SYN,RST SYN,RST -j LOGDROP
+-A INPUT -p tcp --tcp-flags FIN,RST FIN,RST -j LOGDROP
+-A INPUT -p tcp --tcp-flags FIN,ACK FIN -j LOGDROP
+-A INPUT -p tcp --tcp-flags ACK,URG URG -j LOGDROP
+
+# Drop NULL packets
+-A INPUT -p tcp --tcp-flags ALL NONE -j LOGDROP
+
+# Drop XMAS packets
+-A INPUT -p tcp --tcp-flags ALL ALL -j LOGDROP
+
+# ============= SECURITY RULES =============
+# Drop fragments
+-A INPUT -f -j LOGDROP
+
+# Limit RST packets
+-A INPUT -p tcp --tcp-flags RST RST -m limit --limit 2/s --limit-burst 2 -j ACCEPT
+-A INPUT -p tcp --tcp-flags RST RST -j LOGDROP
+
+# ============= ALLOWED SOURCE IPS =============
+{% if firewall_allowed_ips is defined %}
+{% for ip in firewall_allowed_ips %}
+-A INPUT -s {{ ip }} -j ACCEPT
+{% endfor %}
+{% endif %}
+
+# ============= BLOCKED SOURCE IPS =============
+{% if firewall_blocked_ips is defined %}
+{% for ip in firewall_blocked_ips %}
+-A INPUT -s {{ ip }} -j LOGDROP
+{% endfor %}
+{% endif %}
+
+# ============= GEOGRAPHIC BLOCKING =============
+{% if firewall_block_countries is defined %}
+# Note: This requires xtables-addons with geoip support
+{% for country in firewall_block_countries %}
+-A INPUT -m geoip --src-cc {{ country }} -j LOGDROP
+{% endfor %}
+{% endif %}
+
+# ============= DEFAULT DROP =============
+# Log and drop everything else
+-A INPUT -j LOGDROP
+-A FORWARD -j LOGDROP
+
+COMMIT 

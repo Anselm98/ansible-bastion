@@ -1,0 +1,18 @@
+---
+- name: reload iptables
+  shell: iptables-restore < /etc/iptables/iptables.rules
+  ignore_errors: yes
+
+- name: save iptables
+  shell: iptables-save > /etc/iptables/iptables.rules
+  ignore_errors: yes
+
+- name: systemd daemon reload
+  systemd:
+    daemon_reload: yes
+
+- name: restart iptables
+  systemd:
+    name: iptables
+    state: restarted
+  ignore_errors: yes 
