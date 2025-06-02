@@ -56,7 +56,7 @@ app-layer:
     tls:
       enabled: yes
       detection-ports:
-        dp: 443
+        dp: {{ nginx_ssl_port }}
     http:
       enabled: yes
       libhtp:
