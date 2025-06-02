@@ -1,13 +1,14 @@
 ---
 - name: restart auditd
-  systemd:
-    name: auditd
-    state: restarted
+  shell: >
+    service auditd restart || systemctl reload auditd || true
+  ignore_errors: yes
 
 - name: reload auditd
-  systemd:
-    name: auditd
-    state: reloaded
+  shell: >
+    augenrules --load || true &&
+    kill -HUP $(pidof auditd) || true
+  ignore_errors: yes
 
 - name: stop auditd
   systemd:

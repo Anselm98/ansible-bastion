@@ -1,7 +1,7 @@
 ---
 - name: Install auditd
   package:
-    name: auditd
+    name: audit
     state: present
 
 - name: Install audit utilities

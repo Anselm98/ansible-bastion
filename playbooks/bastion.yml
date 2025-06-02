@@ -7,13 +7,20 @@
   roles:
 #    - ssh
 #    - pam
-    - firewall
-    - pki
-    - nginx
-    - fail2ban
-    - yay
-    - suricata
-    - auditd
+    - role: firewall
+      tags: firewall
+    - role: pki
+      tags: pki
+    - role: nginx
+      tags: nginx
+    - role: fail2ban
+      tags: fail2ban
+    - role: yay
+      tags: yay
+    - role: suricata
+      tags: suricata
+    - role: auditd
+      tags: auditd
 
   post_tasks:
     - name: Ensure all services are running and enabled
@@ -28,3 +35,4 @@
         - suricata
         - auditd
       ignore_errors: yes
+      tags: always
