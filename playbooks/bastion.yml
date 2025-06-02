@@ -5,8 +5,8 @@
   gather_facts: yes
 
   roles:
-    - ssh
-    - pam
+#    - ssh
+#    - pam
     - firewall
     - pki
     - nginx

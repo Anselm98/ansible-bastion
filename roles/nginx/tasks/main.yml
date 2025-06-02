@@ -1,4 +1,10 @@
 ---
+- name: Set nginx variables with defaults
+  set_fact:
+    nginx_ssl_port: "{{ nginx_ssl_port | default(443) }}"
+    backend_server: "{{ backend_server | default('192.168.187.200') }}"
+    backend_port: "{{ backend_port | default(8080) }}"
+
 - name: Install nginx
   package:
     name: nginx
@@ -14,27 +20,20 @@
     group: root
   notify: restart nginx
 
+- name: Ensure conf.d directory exists
+  file:
+    path: /etc/nginx/conf.d
+    state: directory
+    mode: '0755'
+
 - name: Create reverse proxy configuration
   template:
     src: default.conf.j2
-    dest: /etc/nginx/sites-available/default
+    dest: /etc/nginx/conf.d/default.conf
     backup: yes
     mode: '0644'
     owner: root
     group: root
-  notify: restart nginx
-
-- name: Ensure sites-enabled directory exists
-  file:
-    path: /etc/nginx/sites-enabled
-    state: directory
-    mode: '0755'
-
-- name: Enable default site
-  file:
-    src: /etc/nginx/sites-available/default
-    dest: /etc/nginx/sites-enabled/default
-    state: link
   notify: restart nginx
 
 - name: Start and enable nginx

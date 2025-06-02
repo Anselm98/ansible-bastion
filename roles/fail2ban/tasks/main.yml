@@ -71,19 +71,8 @@
     group: root
   notify: restart fail2ban
 
-- name: Ensure rsyslog is installed for fail2ban logging
-  package:
-    name: rsyslog
-    state: present
-
 - name: Start and enable fail2ban
   systemd:
     name: fail2ban
-    state: started
-    enabled: yes
-
-- name: Start and enable rsyslog
-  systemd:
-    name: rsyslog
     state: started
     enabled: yes 
