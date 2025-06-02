@@ -1,27 +1,34 @@
 ---
-- name: Install Suricata
-  package:
+# Install Suricata from AUR using yay
+- name: Install Suricata from AUR using yay
+  shell: yay -S suricata --noconfirm
+  become_user: "{{ yay_builder_user | default('aur_builder') }}"
+  environment:
+    HOME: "/home/{{ yay_builder_user | default('aur_builder') }}"
+
+- name: Create suricata system user and group
+  group:
     name: suricata
-    state: present
+    system: yes
 
-- name: Install suricata-update for rule management
-  package:
-    name: python3-pip
-    state: present
-
-- name: Install suricata-update via pip
-  pip:
-    name: suricata-update
-    state: present
+- name: Create suricata system user
+  user:
+    name: suricata
+    group: suricata
+    system: yes
+    shell: /bin/false
+    home: /var/lib/suricata
+    create_home: no
 
 - name: Create Suricata directories
   file:
     path: "{{ item }}"
     state: directory
     mode: '0755'
-    owner: root
-    group: root
+    owner: suricata
+    group: suricata
   loop:
+    - /var/lib/suricata
     - /var/lib/suricata/rules
     - /var/log/suricata
     - /etc/suricata/rules
@@ -36,27 +43,48 @@
     group: root
   notify: restart suricata
 
-- name: Create Suricata default configuration
+- name: Create Suricata systemd service override directory
+  file:
+    path: /etc/systemd/system/suricata.service.d
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Configure Suricata interface and options
   template:
-    src: suricata.j2
-    dest: /etc/default/suricata
-    backup: yes
+    src: suricata-override.conf.j2
+    dest: /etc/systemd/system/suricata.service.d/override.conf
     mode: '0644'
     owner: root
     group: root
-  notify: restart suricata
+  notify:
+    - reload systemd
+    - restart suricata
+
+- name: Install Python pip for suricata-update
+  package:
+    name: python-pip
+    state: present
+
+- name: Install suricata-update via pip
+  pip:
+    name: suricata-update
+    state: present
 
 - name: Initialize suricata-update sources
   command: suricata-update
   register: suricata_update_result
   changed_when: "'No sources configured' not in suricata_update_result.stderr"
   failed_when: false
+  become_user: suricata
 
 - name: Update Suricata rules
   command: suricata-update --reload-command="systemctl reload suricata"
   register: suricata_rules_update
   changed_when: suricata_rules_update.rc == 0
   failed_when: false
+  become_user: suricata
 
 - name: Set proper permissions on Suricata directories
   file:
@@ -67,7 +95,6 @@
   loop:
     - /var/lib/suricata
     - /var/log/suricata
-  ignore_errors: yes
 
 - name: Start and enable Suricata
   systemd:

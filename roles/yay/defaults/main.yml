@@ -1,0 +1,3 @@
+---
+# Default user for building AUR packages
+yay_builder_user: aur_builder 

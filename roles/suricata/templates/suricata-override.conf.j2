@@ -1,0 +1,10 @@
+[Service]
+# Override the default service configuration
+Environment=INTERFACE={{ suricata_interface }}
+ExecStart=
+ExecStart=/usr/bin/suricata -c /etc/suricata/suricata.yaml --pidfile /run/suricata.pid --af-packet={{ suricata_interface }} --user suricata --group suricata
+
+[Unit]
+# Ensure network is available before starting
+After=network.target network-online.target
+Wants=network-online.target 

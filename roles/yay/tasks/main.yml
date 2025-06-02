@@ -1,0 +1,49 @@
+---
+# Install yay AUR helper if not present (required for AUR packages on Arch Linux)
+- name: Check if yay is installed
+  command: which yay
+  register: yay_check
+  failed_when: false
+  changed_when: false
+
+- name: Install base-devel and git for building AUR packages
+  package:
+    name:
+      - base-devel
+      - git
+    state: present
+  when: yay_check.rc != 0
+
+- name: Create a non-root user for building AUR packages
+  user:
+    name: "{{ yay_builder_user }}"
+    shell: /bin/bash
+    create_home: yes
+    system: yes
+  when: yay_check.rc != 0
+
+- name: Allow AUR builder to run pacman without password
+  lineinfile:
+    path: /etc/sudoers
+    line: "{{ yay_builder_user }} ALL=(ALL) NOPASSWD: /usr/bin/pacman"
+    validate: 'visudo -cf %s'
+  when: yay_check.rc != 0
+
+- name: Clone yay repository
+  git:
+    repo: https://aur.archlinux.org/yay.git
+    dest: /tmp/yay
+    force: yes
+  become_user: "{{ yay_builder_user }}"
+  when: yay_check.rc != 0
+
+- name: Build and install yay
+  shell: cd /tmp/yay && makepkg -si --noconfirm
+  become_user: "{{ yay_builder_user }}"
+  when: yay_check.rc != 0
+
+- name: Clean up yay build directory
+  file:
+    path: /tmp/yay
+    state: absent
+  when: yay_check.rc != 0 

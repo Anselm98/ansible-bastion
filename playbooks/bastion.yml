@@ -11,6 +11,7 @@
     - pki
     - nginx
     - fail2ban
+    - yay
     - suricata
     - auditd
 
