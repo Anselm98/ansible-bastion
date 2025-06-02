@@ -3,7 +3,7 @@
   set_fact:
     nginx_ssl_port: "{{ nginx_ssl_port | default(443) }}"
     backend_server: "{{ backend_server | default('192.168.187.200') }}"
-    backend_port: "{{ backend_port | default(8080) }}"
+    backend_port: "{{ backend_port | default(443) }}"
 
 - name: Install nginx
   package:

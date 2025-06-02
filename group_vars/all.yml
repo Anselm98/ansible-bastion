@@ -31,7 +31,7 @@ pki_server_common_name: "web.local.local"
 nginx_port: 8080
 nginx_ssl_port: 443
 backend_server: 192.168.187.200 # IP address of the backend server
-backend_port: 8080
+backend_port: 443
 
 # Suricata Configuration
 suricata_interface: eth0
