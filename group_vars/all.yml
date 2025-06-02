@@ -13,7 +13,7 @@ firewall_allowed_tcp_ports:
 pki_ca_organization: ""
 pki_ca_common_name: ""
 pki_server_organization: ""
-pki_server_common_name: "{{ ansible_fqdn | default('bastion.local') }}"
+pki_server_common_name: "web.local.local"
 
 # Nginx Configuration
 nginx_port: 80
