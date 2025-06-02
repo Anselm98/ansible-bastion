@@ -22,10 +22,12 @@ firewall_web_rate_limit_seconds: 10
 firewall_web_rate_limit_hitcount: 20
 
 # PKI Configuration
-pki_ca_organization: "Bastion CA"
-pki_ca_common_name: "Bastion Root CA"
-pki_server_organization: "Bastion Server"
+pki_ca_organization: "Group One Hardening Security"
+pki_ca_common_name: "Group One Root CA"
+pki_ca_unit: "Group One IT"
+pki_server_organization: "Group One Hardening Security"
 pki_server_common_name: "web.local.local"
+pki_server_unit: "Group One Bastion"
 
 # Nginx Configuration
 nginx_port: 8080
