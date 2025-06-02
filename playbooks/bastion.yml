@@ -10,6 +10,7 @@
     - firewall
     - pki
     - nginx
+    - fail2ban
     - suricata
     - auditd
 
@@ -22,6 +23,7 @@
       loop:
         - sshd
         - nginx
+        - fail2ban
         - suricata
         - auditd
       ignore_errors: yes

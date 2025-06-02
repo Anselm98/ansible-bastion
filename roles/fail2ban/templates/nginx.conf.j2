@@ -1,0 +1,33 @@
+# Nginx jails configuration - Managed by Ansible
+
+[nginx-http-auth]
+enabled = true
+filter = nginx-http-auth
+logpath = /var/log/nginx/proxy_error.log
+maxretry = {{ fail2ban_nginx_maxretry | default('6') }}
+findtime = {{ fail2ban_nginx_findtime | default('600') }}
+bantime = {{ fail2ban_nginx_bantime | default('3600') }}
+
+[nginx-noscript]
+enabled = true
+filter = nginx-noscript
+logpath = /var/log/nginx/proxy_access.log
+maxretry = {{ fail2ban_nginx_noscript_maxretry | default('6') }}
+findtime = {{ fail2ban_nginx_findtime | default('600') }}
+bantime = {{ fail2ban_nginx_bantime | default('3600') }}
+
+[nginx-badbots]
+enabled = true
+filter = nginx-badbots
+logpath = /var/log/nginx/proxy_access.log
+maxretry = {{ fail2ban_nginx_badbots_maxretry | default('2') }}
+findtime = {{ fail2ban_nginx_findtime | default('600') }}
+bantime = {{ fail2ban_nginx_bantime | default('7200') }}
+
+[nginx-req-limit]
+enabled = true
+filter = nginx-req-limit
+logpath = /var/log/nginx/proxy_error.log
+maxretry = {{ fail2ban_nginx_req_limit_maxretry | default('10') }}
+findtime = {{ fail2ban_nginx_findtime | default('600') }}
+bantime = {{ fail2ban_nginx_bantime | default('3600') }} 

@@ -1,0 +1,6 @@
+# Nginx bad bots filter - Managed by Ansible
+
+[Definition]
+failregex = ^<HOST> -.*"(GET|POST).*HTTP.*".*".*"$
+
+ignoreregex = ^<HOST> -.*"(GET|POST).*(robot\.txt|favicon\.ico).*HTTP.*".*"(.*Googlebot.*|.*Bingbot.*|.*Slurp.*|.*DuckDuckBot.*|.*Baiduspider.*|.*YandexBot.*|.*facebookexternalhit.*)"$ 

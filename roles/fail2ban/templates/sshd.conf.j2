@@ -1,0 +1,10 @@
+# SSH jail configuration - Managed by Ansible
+
+[sshd]
+enabled = true
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = {{ fail2ban_ssh_maxretry | default('3') }}
+findtime = {{ fail2ban_ssh_findtime | default('600') }}
+bantime = {{ fail2ban_ssh_bantime | default('7200') }}
+port = {{ ssh_port | default('22') }} 

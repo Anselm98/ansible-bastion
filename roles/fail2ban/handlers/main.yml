@@ -1,0 +1,15 @@
+---
+- name: restart fail2ban
+  systemd:
+    name: fail2ban
+    state: restarted
+
+- name: reload fail2ban
+  systemd:
+    name: fail2ban
+    state: reloaded
+
+- name: stop fail2ban
+  systemd:
+    name: fail2ban
+    state: stopped 

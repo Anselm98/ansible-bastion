@@ -27,6 +27,15 @@ suricata_home_net: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
 suricata_external_net: "!$HOME_NET"
 suricata_run_mode: "IDS"  # IDS or IPS mode
 
+# Fail2ban Configuration
+fail2ban_bantime: 3600
+fail2ban_findtime: 600
+fail2ban_maxretry: 5
+fail2ban_ssh_maxretry: 3
+fail2ban_ssh_bantime: 7200
+fail2ban_nginx_bantime: 3600
+fail2ban_nginx_maxretry: 6
+
 # Auditd Configuration
 
 

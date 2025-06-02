@@ -1,0 +1,89 @@
+---
+- name: Install fail2ban
+  package:
+    name: fail2ban
+    state: present
+
+- name: Create fail2ban directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  loop:
+    - /etc/fail2ban/jail.d
+    - /etc/fail2ban/filter.d
+    - /etc/fail2ban/action.d
+
+- name: Create fail2ban main configuration
+  template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    backup: yes
+    mode: '0644'
+    owner: root
+    group: root
+  notify: restart fail2ban
+
+- name: Create nginx filter for fail2ban
+  template:
+    src: nginx-http-auth.conf.j2
+    dest: /etc/fail2ban/filter.d/nginx-http-auth.conf
+    mode: '0644'
+    owner: root
+    group: root
+  notify: restart fail2ban
+
+- name: Create nginx noscript filter
+  template:
+    src: nginx-noscript.conf.j2
+    dest: /etc/fail2ban/filter.d/nginx-noscript.conf
+    mode: '0644'
+    owner: root
+    group: root
+  notify: restart fail2ban
+
+- name: Create nginx badbots filter
+  template:
+    src: nginx-badbots.conf.j2
+    dest: /etc/fail2ban/filter.d/nginx-badbots.conf
+    mode: '0644'
+    owner: root
+    group: root
+  notify: restart fail2ban
+
+- name: Create nginx jail configuration
+  template:
+    src: nginx.conf.j2
+    dest: /etc/fail2ban/jail.d/nginx.conf
+    mode: '0644'
+    owner: root
+    group: root
+  notify: restart fail2ban
+
+- name: Create SSH jail configuration
+  template:
+    src: sshd.conf.j2
+    dest: /etc/fail2ban/jail.d/sshd.conf
+    mode: '0644'
+    owner: root
+    group: root
+  notify: restart fail2ban
+
+- name: Ensure rsyslog is installed for fail2ban logging
+  package:
+    name: rsyslog
+    state: present
+
+- name: Start and enable fail2ban
+  systemd:
+    name: fail2ban
+    state: started
+    enabled: yes
+
+- name: Start and enable rsyslog
+  systemd:
+    name: rsyslog
+    state: started
+    enabled: yes 
