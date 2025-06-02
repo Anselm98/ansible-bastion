@@ -1,0 +1,16 @@
+# Suricata startup configuration - Managed by Ansible
+
+# Interface to listen on
+IFACE={{ suricata_interface }}
+
+# Additional options
+OPTIONS="--user suricata --group suricata"
+
+# Run mode (IDS or IPS)
+RUN_MODE="{{ suricata_run_mode | default('IDS') }}"
+
+# Log directory
+SURICATE_DIR="/var/log/suricata"
+
+# Configuration file
+CONFIG_FILE="/etc/suricata/suricata.yaml" 

@@ -22,7 +22,10 @@ backend_server:  # IP address of the backend server
 backend_port: 8080
 
 # Suricata Configuration
-
+suricata_interface: eth0
+suricata_home_net: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
+suricata_external_net: "!$HOME_NET"
+suricata_run_mode: "IDS"  # IDS or IPS mode
 
 # Auditd Configuration
 

@@ -1,0 +1,76 @@
+---
+- name: Install Suricata
+  package:
+    name: suricata
+    state: present
+
+- name: Install suricata-update for rule management
+  package:
+    name: python3-pip
+    state: present
+
+- name: Install suricata-update via pip
+  pip:
+    name: suricata-update
+    state: present
+
+- name: Create Suricata directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  loop:
+    - /var/lib/suricata/rules
+    - /var/log/suricata
+    - /etc/suricata/rules
+
+- name: Create Suricata configuration
+  template:
+    src: suricata.yaml.j2
+    dest: /etc/suricata/suricata.yaml
+    backup: yes
+    mode: '0644'
+    owner: root
+    group: root
+  notify: restart suricata
+
+- name: Create Suricata default configuration
+  template:
+    src: suricata.j2
+    dest: /etc/default/suricata
+    backup: yes
+    mode: '0644'
+    owner: root
+    group: root
+  notify: restart suricata
+
+- name: Initialize suricata-update sources
+  command: suricata-update
+  register: suricata_update_result
+  changed_when: "'No sources configured' not in suricata_update_result.stderr"
+  failed_when: false
+
+- name: Update Suricata rules
+  command: suricata-update --reload-command="systemctl reload suricata"
+  register: suricata_rules_update
+  changed_when: suricata_rules_update.rc == 0
+  failed_when: false
+
+- name: Set proper permissions on Suricata directories
+  file:
+    path: "{{ item }}"
+    owner: suricata
+    group: suricata
+    recurse: yes
+  loop:
+    - /var/lib/suricata
+    - /var/log/suricata
+  ignore_errors: yes
+
+- name: Start and enable Suricata
+  systemd:
+    name: suricata
+    state: started
+    enabled: yes 
