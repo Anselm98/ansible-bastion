@@ -1,10 +1,11 @@
 [Service]
-# Override the default service configuration
+# Override the default service configuration for Arch Linux
 Environment=INTERFACE={{ suricata_interface }}
 ExecStart=
-ExecStart=/usr/bin/suricata -c /etc/suricata/suricata.yaml --pidfile /run/suricata.pid --af-packet={{ suricata_interface }} --user suricata --group suricata
+ExecStart=/usr/bin/suricata -c {{ suricata_config_file }} --pidfile /run/suricata.pid --af-packet={{ suricata_interface }} --user {{ suricata_user }} --group {{ suricata_group }}
 
 [Unit]
 # Ensure network is available before starting
 After=network.target network-online.target
-Wants=network-online.target 
+Wants=network-online.target
+Requires=network.target 

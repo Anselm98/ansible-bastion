@@ -1,0 +1,41 @@
+---
+# Suricata configuration defaults for Arch Linux
+
+# Network interface to monitor (required)
+suricata_interface: eth0
+
+# Suricata user and group
+suricata_user: suricata
+suricata_group: suricata
+
+# Configuration directories
+suricata_config_dir: /etc/suricata
+suricata_log_dir: /var/log/suricata
+suricata_lib_dir: /var/lib/suricata
+suricata_rules_dir: /etc/suricata/rules
+
+# Suricata configuration file
+suricata_config_file: "{{ suricata_config_dir }}/suricata.yaml"
+
+# Network configuration (can be overridden in group_vars)
+suricata_home_net: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
+suricata_external_net: "!$HOME_NET"
+
+# Rule management
+suricata_update_rules: true
+suricata_rules_sources: []
+
+# Service configuration
+suricata_service_enabled: true
+suricata_service_state: started
+
+# AUR builder user (inherited from yay role)
+yay_builder_user: aur_builder
+
+# Performance tuning
+suricata_profile: medium
+suricata_detect_thread_ratio: 1.0
+
+# Logging configuration
+suricata_log_level: notice
+suricata_eve_log_enabled: true 

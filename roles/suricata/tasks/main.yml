@@ -1,48 +1,70 @@
 ---
-# Install Suricata from AUR using yay
+# Verify that yay is available (dependency check)
+- name: Verify yay is installed
+  command: which yay
+  register: yay_available
+  failed_when: yay_available.rc != 0
+  changed_when: false
+
+# Install Suricata from AUR following official Arch documentation
 - name: Install Suricata from AUR using yay
   shell: yay -S suricata --noconfirm
-  become_user: "{{ yay_builder_user | default('aur_builder') }}"
+  become_user: "{{ yay_builder_user }}"
   environment:
-    HOME: "/home/{{ yay_builder_user | default('aur_builder') }}"
+    HOME: "/home/{{ yay_builder_user }}"
+  register: suricata_install
+  changed_when: "'nothing to do' not in suricata_install.stdout"
 
-- name: Create suricata system user and group
+# Create suricata system group and user as per official documentation
+- name: Create suricata system group
   group:
-    name: suricata
+    name: "{{ suricata_group }}"
     system: yes
 
 - name: Create suricata system user
   user:
-    name: suricata
-    group: suricata
+    name: "{{ suricata_user }}"
+    group: "{{ suricata_group }}"
     system: yes
     shell: /bin/false
-    home: /var/lib/suricata
+    home: "{{ suricata_lib_dir }}"
     create_home: no
 
+# Create required directories with proper permissions
 - name: Create Suricata directories
   file:
     path: "{{ item }}"
     state: directory
     mode: '0755'
-    owner: suricata
-    group: suricata
+    owner: "{{ suricata_user }}"
+    group: "{{ suricata_group }}"
   loop:
-    - /var/lib/suricata
-    - /var/lib/suricata/rules
-    - /var/log/suricata
-    - /etc/suricata/rules
+    - "{{ suricata_lib_dir }}"
+    - "{{ suricata_lib_dir }}/rules"
+    - "{{ suricata_log_dir }}"
+    - "{{ suricata_rules_dir }}"
 
+# Ensure configuration directory exists with root ownership
+- name: Create Suricata configuration directory
+  file:
+    path: "{{ suricata_config_dir }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+# Deploy main Suricata configuration
 - name: Create Suricata configuration
   template:
     src: suricata.yaml.j2
-    dest: /etc/suricata/suricata.yaml
+    dest: "{{ suricata_config_file }}"
     backup: yes
     mode: '0644'
     owner: root
     group: root
   notify: restart suricata
 
+# Configure systemd service override for interface binding
 - name: Create Suricata systemd service override directory
   file:
     path: /etc/systemd/system/suricata.service.d
@@ -51,7 +73,7 @@
     owner: root
     group: root
 
-- name: Configure Suricata interface and options
+- name: Configure Suricata interface and service options
   template:
     src: suricata-override.conf.j2
     dest: /etc/systemd/system/suricata.service.d/override.conf
@@ -62,6 +84,7 @@
     - reload systemd
     - restart suricata
 
+# Install rule management tools
 - name: Install Python pip for suricata-update
   package:
     name: python-pip
@@ -72,32 +95,50 @@
     name: suricata-update
     state: present
 
+# Initialize and update rules if enabled
+- name: Check if suricata-update has been initialized
+  stat:
+    path: /var/lib/suricata/update/sources
+  register: suricata_update_initialized
+
 - name: Initialize suricata-update sources
   command: suricata-update
   register: suricata_update_result
-  changed_when: "'No sources configured' not in suricata_update_result.stderr"
+  changed_when: "'Loaded' in suricata_update_result.stdout"
   failed_when: false
-  become_user: suricata
+  become_user: "{{ suricata_user }}"
+  when: not suricata_update_initialized.stat.exists or suricata_update_rules
 
 - name: Update Suricata rules
   command: suricata-update --reload-command="systemctl reload suricata"
   register: suricata_rules_update
-  changed_when: suricata_rules_update.rc == 0
+  changed_when: "'Updated' in suricata_rules_update.stdout"
   failed_when: false
-  become_user: suricata
+  become_user: "{{ suricata_user }}"
+  when: suricata_update_rules
 
+# Set proper ownership on all Suricata directories
 - name: Set proper permissions on Suricata directories
   file:
     path: "{{ item }}"
-    owner: suricata
-    group: suricata
+    owner: "{{ suricata_user }}"
+    group: "{{ suricata_group }}"
     recurse: yes
   loop:
-    - /var/lib/suricata
-    - /var/log/suricata
+    - "{{ suricata_lib_dir }}"
+    - "{{ suricata_log_dir }}"
 
-- name: Start and enable Suricata
+# Validate Suricata configuration before starting
+- name: Test Suricata configuration
+  command: suricata -T -c "{{ suricata_config_file }}"
+  register: suricata_config_test
+  changed_when: false
+  failed_when: suricata_config_test.rc != 0
+
+# Enable and start Suricata service
+- name: Start and enable Suricata service
   systemd:
     name: suricata
-    state: started
-    enabled: yes 
+    state: "{{ suricata_service_state }}"
+    enabled: "{{ suricata_service_enabled }}"
+    daemon_reload: yes 
