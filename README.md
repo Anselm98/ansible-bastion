@@ -58,7 +58,7 @@ Edit the inventory file to specify your target hosts:
 bastion-host ansible_host=192.168.1.100 ansible_user=admin
 
 [bastion:vars]
-suricata_interface=eth0
+suricata_interface=ens33
 backend_server=192.168.187.200
 backend_port=443
 ```

@@ -29,7 +29,7 @@ Suricata is a high performance Network IDS, IPS and Network Security Monitoring 
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `suricata_interface` | Network interface to monitor | `eth0`, `enp0s3` |
+| `suricata_interface` | Network interface to monitor | `ens33`, `enp0s3` |
 
 ### Optional Variables
 
