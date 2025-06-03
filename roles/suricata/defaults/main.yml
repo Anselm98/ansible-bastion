@@ -2,7 +2,7 @@
 # Suricata configuration defaults for Arch Linux
 
 # Network interface to monitor (required)
-suricata_interface: eth0
+suricata_interface: ens33
 
 # Suricata user and group
 suricata_user: suricata

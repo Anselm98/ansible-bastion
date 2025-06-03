@@ -58,7 +58,7 @@ Suricata is a high performance Network IDS, IPS and Network Security Monitoring 
   roles:
     - role: suricata
       vars:
-        suricata_interface: eth0
+        suricata_interface: ens33
 ```
 
 ### Advanced Configuration
